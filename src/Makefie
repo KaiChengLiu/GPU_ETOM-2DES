@@ -6,7 +6,7 @@ CXXFLAGS = -Xcompiler -Wall,-Wno-sign-compare,-Wno-endif-labels,-Wno-unused-vari
 INCLUDES = -I/usr/include -I../lib -I/usr/local/cuda/include
 
 # Libraries to link against, including cuBLAS
-LIBS = -L../lib -lgsl -lgslcblas -lm -lcpu2des -lcublas
+LIBS = -L../lib -lcpu2des -lcublas
 
 # Source files (changed .cpp to .cu)
 SRCS = GPU_2DES.cu
