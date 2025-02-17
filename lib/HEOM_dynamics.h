@@ -36,11 +36,11 @@ void total_ADO_dynamics_Ht(cublasHandle_t& cublasH, param& key, const data_type*
 void total_ADO_dynamics_Ht_batch(cublasHandle_t& cublasH, param& key, const data_type* d_rho_copy, data_type* d_drho, const data_type* d_Ht, const data_type* const* d_rho_batch, data_type** d_drho_batch, data_type* d_work_space, data_type** d_work_batch, data_type* d_rho_work_space, data_type** d_rho_work_batch, vector<cudaStream_t>& streams);
 
 
-void HEOM_Solver(param& key, std::vector<int>& sites);
+void dynamics_solver(param& key, std::vector<int>& sites, vector<vector<double>>& population);
 
 
 
-void propagation_Ht(param& key, const data_type* d_H, const int nv1, const int nv2, const int nv3, std::vector<data_type>& polarization);
+void twoD_spectrum_solver(param& key, const data_type* d_H, const int nv1, const int nv2, const int nv3, std::vector<data_type>& polarization);
 
 void propagation_Ht_batch(param& key, const data_type* d_H, const int nv1, const int nv2, const int nv3, std::vector<data_type>& polarization);
 

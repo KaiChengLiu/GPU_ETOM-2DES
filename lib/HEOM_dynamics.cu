@@ -151,7 +151,6 @@ std::unordered_map<std::string, int> Build_ADO_map(const std::vector<std::string
 }
 
 void total_ADO_dynamics(const param& key, const data_type* d_rho_copy, data_type* d_drho, std::vector<cudaStream_t> streams) {
-	/*
 	int sys_size = key.sys_size;
 	int total_size = sys_size * sys_size;
 	cublasHandle_t cublasH = NULL;
@@ -229,7 +228,7 @@ void total_ADO_dynamics(const param& key, const data_type* d_rho_copy, data_type
 
 	for (int i = 0; i < streams.size(); i++) cudaStreamSynchronize(streams[i]);
 	cublasError(cublasDestroy(cublasH), __FILE__, __LINE__);
-	*/
+	
 }
 
 void total_ADO_dynamics_Ht(cublasHandle_t& cublasH, param& key, const data_type* d_rho_copy, data_type* d_drho, const data_type* d_Ht) {
@@ -322,42 +321,6 @@ void total_ADO_dynamics_Ht(cublasHandle_t& cublasH, param& key, const data_type*
 				}
 			}
 		}
-
-		/*
-		if (key.K_m == 1) {
-			for (int j = 0; j < key.K; j++) {
-				float x1 = 0;
-				float x2 = 2 * key.lambda[j].x / key.beta.x / h_bar.x / key.gamma[j][0].x;
-				for (int k = 0; k < key.K_m; k++) {
-					x1 += key.alpha[j][k].x / key.gamma[j][k].x;
-				}
-				data_type x = make_cuComplex(x1 - x2, 0.0);
-				//cudaError(cudaDeviceSynchronize(), __FILE__, __LINE__);
-				cublasError(cublasCgemm3m(cublasH, CUBLAS_OP_N, CUBLAS_OP_N,
-					sys_size, sys_size, sys_size,
-					&ONE, key.d_S + total_size * j, sys_size, d_rho_copy + total_size * i, sys_size,
-					&ZERO, d_tmp, sys_size), __FILE__, __LINE__);
-				//cudaError(cudaDeviceSynchronize(), __FILE__, __LINE__);
-				cublasError(cublasCgemm3m(cublasH, CUBLAS_OP_N, CUBLAS_OP_N,
-					sys_size, sys_size, sys_size,
-					&MINUS_ONE, d_rho_copy + total_size * i, sys_size, key.d_S + total_size * j, sys_size,
-					&ONE, d_tmp, sys_size), __FILE__, __LINE__);
-				//cudaError(cudaDeviceSynchronize(), __FILE__, __LINE__);
-				cublasError(cublasCscal(cublasH, total_size, &x, d_tmp, 1), __FILE__, __LINE__);
-				//cudaError(cudaDeviceSynchronize(), __FILE__, __LINE__);
-				cublasError(cublasCgemm3m(cublasH, CUBLAS_OP_N, CUBLAS_OP_N,
-					sys_size, sys_size, sys_size,
-					&ONE, key.d_S + total_size * j, sys_size, d_tmp, sys_size,
-					&ONE, d_drho + total_size * i, sys_size), __FILE__, __LINE__);
-				//cudaError(cudaDeviceSynchronize(), __FILE__, __LINE__);
-				cublasError(cublasCgemm3m(cublasH, CUBLAS_OP_N, CUBLAS_OP_N,
-					sys_size, sys_size, sys_size,
-					&MINUS_ONE, d_tmp, sys_size, key.d_S + total_size * j, sys_size,
-					&ONE, d_drho + total_size * i, sys_size), __FILE__, __LINE__);
-				//cudaError(cudaDeviceSynchronize(), __FILE__, __LINE__);
-			}
-		}
-		*/
 	}
 
 	// Free allocated memory
@@ -460,48 +423,11 @@ void total_ADO_dynamics_Ht_batch(cublasHandle_t& cublasH, param& key, const data
 			}
 		}
 	}
-	/*
-	if (key.K_m == 1) {
-		for (int j = 0; j < key.K; j++) {
-			float x1 = 0;
-			float x2 = 2 * key.lambda[j].x / key.beta.x / h_bar.x / key.gamma[j][0].x;
-			for (int k = 0; k < key.K_m; k++) {
-				x1 += key.alpha[j][k].x / key.gamma[j][k].x;
-			}
-			data_type x = make_cuComplex(x1 - x2, 0.0);
-			//cudaError(cudaDeviceSynchronize(), __FILE__, __LINE__);
-			cublasError(cublasCgemm3m(cublasH, CUBLAS_OP_N, CUBLAS_OP_N,
-				sys_size, sys_size, sys_size,
-				&ONE, key.d_S + total_size * j, sys_size, d_rho_copy + total_size * i, sys_size,
-				&ZERO, d_tmp, sys_size), __FILE__, __LINE__);
-			//cudaError(cudaDeviceSynchronize(), __FILE__, __LINE__);
-			cublasError(cublasCgemm3m(cublasH, CUBLAS_OP_N, CUBLAS_OP_N,
-				sys_size, sys_size, sys_size,
-				&MINUS_ONE, d_rho_copy + total_size * i, sys_size, key.d_S + total_size * j, sys_size,
-				&ONE, d_tmp, sys_size), __FILE__, __LINE__);
-			//cudaError(cudaDeviceSynchronize(), __FILE__, __LINE__);
-			cublasError(cublasCscal(cublasH, total_size, &x, d_tmp, 1), __FILE__, __LINE__);
-			//cudaError(cudaDeviceSynchronize(), __FILE__, __LINE__);
-			cublasError(cublasCgemm3m(cublasH, CUBLAS_OP_N, CUBLAS_OP_N,
-				sys_size, sys_size, sys_size,
-				&ONE, key.d_S + total_size * j, sys_size, d_tmp, sys_size,
-				&ONE, d_drho + total_size * i, sys_size), __FILE__, __LINE__);
-			//cudaError(cudaDeviceSynchronize(), __FILE__, __LINE__);
-			cublasError(cublasCgemm3m(cublasH, CUBLAS_OP_N, CUBLAS_OP_N,
-				sys_size, sys_size, sys_size,
-				&MINUS_ONE, d_tmp, sys_size, key.d_S + total_size * j, sys_size,
-				&ONE, d_drho + total_size * i, sys_size), __FILE__, __LINE__);
-			//cudaError(cudaDeviceSynchronize(), __FILE__, __LINE__);
-		}
-	}
-	*/
-
 	// Free allocated memory
 	cudaError(cudaFree(d_tmp), __FILE__, __LINE__);
 }
 
-void HEOM_Solver(param& key, std::vector<int>& sites) {
-	/*
+void dynamics_solver(param& key, std::vector<int>& sites, vector<vector<double>>& population) {
 	int sys_size = key.sys_size;
 	int total_size = sys_size * sys_size;
 	if (sites.size() > sys_size) {
@@ -540,15 +466,16 @@ void HEOM_Solver(param& key, std::vector<int>& sites) {
 	data_type* d_k4 = nullptr;
 	cudaError(cudaMalloc(&d_k4, total_size * key.ado.size() * sizeof(data_type)), __FILE__, __LINE__);
 
-
+	int ct = 0;
 	for (float t = 0; t <= key.t_end; t += key.step_size) {
 		cudaMemcpy(d_rho_copy, key.d_rho, total_size * key.ado.size() * sizeof(data_type), cudaMemcpyDeviceToDevice);
 		cudaError(cudaDeviceSynchronize(), __FILE__, __LINE__);
 		for (int j = 0; j < sites.size(); j++) {
 			data_type r;
 			To_Host(key.d_rho[0], r, (sites[j] - 1) * (sys_size + 1));
-			files[j] << r.x << '\n';
+			population[j][ct] = r.x;
 		}
+		ct++;
 
 		//printf("%f\n", r.x);
 		//cudaMemcpy(d_rho_copy, d_rho, total_size * ado.size() * sizeof(data_type), cudaMemcpyDeviceToDevice);
@@ -596,14 +523,12 @@ void HEOM_Solver(param& key, std::vector<int>& sites) {
 	cudaFree(d_k4);
 	cudaFree(d_rho_copy);
 	cublasDestroy(cublasH);
-	*/
 }
 
 
-void propagation_Ht(param& key, const data_type* d_H, const int nv1, const int nv2, const int nv3, std::vector<data_type>& polarization) {
+void twoD_spectrum_solver(param& key, const data_type* d_H, const int nv1, const int nv2, const int nv3, std::vector<data_type>& polarization) {
 	int sys_size = key.sys_size;
 	int total_size = sys_size * sys_size;
-	int stream_num = 16;
 	key.reset_rho();
 
 	cublasHandle_t cublasH;
