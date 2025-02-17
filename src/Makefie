@@ -9,20 +9,25 @@ INCLUDES = -I/usr/include -I../lib -I/usr/local/cuda/include
 LIBS = -L../lib -lcpu2des -lcublas
 
 # Source files (changed .cpp to .cu)
-SRCS = GPU_2DES.cu
+SRCS = GPU_2DES.cu GPU_dynamics.cu
 
 # Object files
 OBJS = $(SRCS:.cu=.o)
 
-# Executable name
-EXEC = GPU_2DES
+# Executable names
+EXEC_2DES = GPU_2DES
+EXEC_DYNAMICS = GPU_dynamics
 
-# Default target
-all: $(EXEC)
+# Default target (build both executables)
+all: $(EXEC_2DES) $(EXEC_DYNAMICS)
 
-# Link the executable
-$(EXEC): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(EXEC) $(OBJS) $(LIBS)
+# Link the GPU_2DES executable
+$(EXEC_2DES): GPU_2DES.o
+	$(CXX) $(CXXFLAGS) -o $(EXEC_2DES) GPU_2DES.o $(LIBS)
+
+# Link the GPU_dynamics executable
+$(EXEC_DYNAMICS): GPU_dynamics.o
+	$(CXX) $(CXXFLAGS) -o $(EXEC_DYNAMICS) GPU_dynamics.o $(LIBS)
 
 # Compile source files into object files
 %.o: %.cu
@@ -30,7 +35,7 @@ $(EXEC): $(OBJS)
 
 # Clean up the build directory
 clean:
-	rm -f $(OBJS) $(EXEC)
+	rm -f $(OBJS) $(EXEC_2DES) $(EXEC_DYNAMICS)
 
 # Phony targets
 .PHONY: all clean
