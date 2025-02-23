@@ -28,4 +28,4 @@ void polar_mat_ranrot(param& key);
 
 void compute_pulse_interaction(param& key, vector<data_type*>& M);
 
-#endif POLAR_H
+#endif

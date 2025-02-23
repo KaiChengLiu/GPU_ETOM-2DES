@@ -1,0 +1,44 @@
+------------------------------------------------------
+ This job is allocated on 1 cpu(s)
+Job is running on node(s): 
+      1 gpu02
+------------------------------------------------------
+PBS: qsub is running on helios
+PBS: originating queue is GPU_queue
+PBS: executing queue is GPU_queue
+PBS: working directory is /home/andrew91411/GPU_ETOM-2DES/script
+PBS: execution mode is PBS_BATCH
+PBS: job identifier is 33215.helios
+PBS: job name is GPU_dynamics_job
+PBS: node file is /var/spool/pbs/aux/33215.helios
+PBS: number of nodes is 1
+PBS: local scratch directory is /scratch/andrew91411/tmp-175722
+PBS: current home directory is /home/andrew91411
+PBS: PATH = /home/andrew91411/cuda/bin:/usr/share/Modules/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/opt/pbs/bin
+------------------------------------------------------
+Job starts at:
+Sat Feb 22 07:52:36 UTC 2025
+Master hostname:
+gpu02
+ 
+core file size          (blocks, -c) 0
+data seg size           (kbytes, -d) unlimited
+scheduling priority             (-e) 0
+file size               (blocks, -f) unlimited
+pending signals                 (-i) 513833
+max locked memory       (kbytes, -l) unlimited
+max memory size         (kbytes, -m) 125829120
+open files                      (-n) 16384
+pipe size            (512 bytes, -p) 8
+POSIX message queues     (bytes, -q) 819200
+real-time priority              (-r) 0
+stack size              (kbytes, -s) unlimited
+cpu time               (seconds, -t) unlimited
+max user processes              (-u) 513833
+virtual memory          (kbytes, -v) unlimited
+file locks                      (-x) unlimited
+Entering the job work directory...
+Workdir: /home/andrew91411/GPU_ETOM-2DES/script
+ 
+Job ends at:
+Sat Feb 22 07:52:46 UTC 2025

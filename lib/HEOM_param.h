@@ -29,7 +29,8 @@ struct pulse
 class param {
 
 public:
-	param(string filename);
+	void param_2des(string filename);
+	void param_dynamics(string filename);
 	int sys_size = 0;
 	int single_size = 0;
 	vector<string> ado;
@@ -51,12 +52,11 @@ public:
 	int K_m = 0;
 	int K_extra = 0;
 	int L = 0;
-	int cutoff_level = 0;
 	int n_sample = 0;
 	data_type beta;
 	vector<data_type> Hal;
 	vector<data_type> Disorder;
-	string bathtype;
+	string bath_type;
 
 	vector<float> angle;
 	vector<vector<data_type>> alpha;

@@ -3,7 +3,7 @@ double delta(int a, int b) {
 	return a == b ? 1 : 0;
 }
 
-param::param(string filename) {
+void param::param_2des(string filename) {
 	fstream f(filename);
 	string line, key_word;
 	cublasHandle_t cublasH;
@@ -15,13 +15,10 @@ param::param(string filename) {
 
 		if (key_word == "HEOM") {
 			//cout << "Reading HEOM data" << '\n';
-
-			int total_size = this->sys_size * this->sys_size;
 			getline(f, line);
 			istringstream val(line);
 			val >> this->K >> this->L;
 			this->K_m = 0;
-			this->cutoff_level = 0;
 		}
 
 		else if (key_word == "SIZE") {
@@ -31,6 +28,7 @@ param::param(string filename) {
 			val >> this->single_size;
 			this->sys_size = this->single_size + (this->single_size - 1) * (this->single_size - 2) / 2;
 
+			this->sys_size = this->single_size + (this->single_size - 1) * (this->single_size - 2) / 2;
 			int ct = this->single_size;
 			for (int i = 1; i < this->single_size; i++) {
 				for (int j = i; j < this->single_size; j++) {
@@ -40,6 +38,7 @@ param::param(string filename) {
 					}
 				}
 			}
+			
 		}
 
 		else if (key_word == "DISORDER") {
@@ -67,7 +66,7 @@ param::param(string filename) {
 			this->d_eigenstate = To_Device(eigenstate);
 			vector<data_type> Hal(this->sys_size * this->sys_size);
 			float val;
-			for (int i = 0; i < this->single_size; i++) {
+			for (int i = 0; i < this->sys_size; i++) {
 				getline(f, line);
 				istringstream row(line);
 				int j = 0;
@@ -103,7 +102,6 @@ param::param(string filename) {
 				Xz[i + this->sys_size * j] = make_cuComplex(z, 0.0);
 				X_site[i + this->sys_size * j] = make_cuComplex(sqrt(x * x + y * y + z * z), 0.0);
 			}
-
 			for (int i = 0; i < this->sys_size; i++) {
 				for (int j = this->single_size; j < this->sys_size; j++) {
 					int a = this->d_map[j].first;
@@ -168,6 +166,7 @@ param::param(string filename) {
 		}
 
 		else if (key_word == "BATHTYPE") {
+			//cout << "Reading BATHTYPE data" << '\n';
 			getline(f, line);
 			istringstream bathtype_stream(line);
 			bathtype_stream >> this->bath_type;
@@ -175,22 +174,22 @@ param::param(string filename) {
 
 		else if (key_word == "BATH") {
 			//cout << "Reading BATH data" << '\n';
-			if (this->bath_type == "etom") {
+			if (this->bath_type == "artificial") {
 				getline(f, line);
 				istringstream bath_stream(line);
-				double l;
+				float l;
 				bath_stream >> l;
 				for (int i = 0; i < this->K; i++) this->lambda.push_back(make_cuComplex(l, 0.0));
-
 				int total_size = this->sys_size * this->sys_size;
 				vector<data_type> S(total_size * this->K, { 0.0, 0.0 });
 				for (int i = 0; i < this->K; i++) {
 					S[i * total_size + (i + 1) + this->sys_size * (i + 1)] = { 1.0, 0.0 };
-					this->Hal[(i + 1)  + this->sys_size * (i + 1)].x += (lambda / h_bar.x);
+					this->Hal[(i + 1) + this->sys_size * (i + 1)].x += l;
 				}
+
+
 				this->d_S = To_Device(S);
 				this->d_Hal = To_Device(this->Hal);
-
 				int n_modes;
 				getline(f, line);
 				istringstream n_modes_stream(line);
@@ -213,7 +212,7 @@ param::param(string filename) {
 					this->alpha_t.push_back(alpha_t);
 					this->gamma.push_back(gamma);
 				}
-				this->K_extra = this->gamma[0].size() - this->K_m;
+				this->K_m = this->gamma[0].size();
 			}
 		}
 
@@ -246,6 +245,121 @@ param::param(string filename) {
 	cublasError(cublasDestroy(cublasH), __FILE__, __LINE__);
 }
 
+void param::param_dynamics(string filename) {
+	{
+		fstream f(filename);
+		string line, key_word;
+		cublasHandle_t cublasH;
+		cublasCreate(&cublasH);
+		while (getline(f, line)) {
+			if (line.empty() || line[0] == '#') continue;
+			istringstream iss(line);
+			iss >> key_word;
+
+			if (key_word == "HEOM") {
+				//cout << "Reading HEOM data" << '\n';
+				getline(f, line);
+				istringstream val(line);
+				val >> this->K >> this->L;
+				this->K_m = 0;
+			}
+
+			else if (key_word == "SIZE") {
+				//cout << "Reading SIZE data" << '\n';
+				getline(f, line);
+				istringstream val(line);
+				val >> this->single_size;
+				this->sys_size = this->single_size;
+			}
+
+			else if (key_word == "HAMILTONIAN") {
+				//cout << "Reading HAMILTONIAN data" << '\n';
+				vector<data_type> eigenstate(this->sys_size * this->sys_size, make_cuComplex(0.0, 0.0));
+				this->d_eigenstate = To_Device(eigenstate);
+				vector<data_type> Hal(this->sys_size * this->sys_size);
+				float val;
+				for (int i = 0; i < this->sys_size; i++) {
+					getline(f, line);
+					istringstream row(line);
+					int j = 0;
+					while (row >> val) {
+						Hal[i + this->sys_size * j] = make_cuComplex(val / h_bar.x, 0.0);
+						j++;
+					}
+				}
+				this->Hal = Hal;
+			}
+
+			else if (key_word == "TEMPERATURE") {
+				//cout << "Reading TEMPERATURE data" << '\n';
+				getline(f, line);
+				istringstream temperature_stream(line);
+				float temperature;
+				temperature_stream >> temperature;
+				this->beta = cuCdivf(ONE, cuCmulf({ temperature, 0.0 }, boltz_k));
+			}
+
+			else if (key_word == "BATHTYPE") {
+				getline(f, line);
+				istringstream bathtype_stream(line);
+				bathtype_stream >> this->bath_type;
+			}
+
+			else if (key_word == "BATH") {
+				//cout << "Reading BATH data" << '\n';
+				if (this->bath_type == "artificial") {
+					getline(f, line);
+					istringstream bath_stream(line);
+					float l;
+					bath_stream >> l;
+					for (int i = 0; i < this->K; i++) this->lambda.push_back(make_cuComplex(l, 0.0));
+					int total_size = this->sys_size * this->sys_size;
+					vector<data_type> S(total_size * this->K, { 0.0, 0.0 });
+					for (int i = 0; i < this->K; i++) {
+						S[i * total_size + i + this->sys_size * i] = { 1.0, 0.0 };
+						this->Hal[i + this->sys_size * i].x += l;
+					}
+
+
+					this->d_S = To_Device(S);
+					this->d_Hal = To_Device(this->Hal);
+					int n_modes;
+					getline(f, line);
+					istringstream n_modes_stream(line);
+					n_modes_stream >> n_modes;
+
+					vector<data_type> alpha;
+					vector<data_type> alpha_t;
+					vector<data_type> gamma;
+					for (int i = 0; i < n_modes; i++) {
+						double a, b, g, w;
+						getline(f, line);
+						istringstream modes_stream(line);
+						modes_stream >> a >> b >> g >> w;
+						alpha.push_back(make_cuComplex(a, b));
+						alpha_t.push_back(make_cuComplex(a, -b));
+						gamma.push_back(make_cuComplex(g, w));
+					}
+					for (int i = 0; i < this->K; i++) {
+						this->alpha.push_back(alpha);
+						this->alpha_t.push_back(alpha_t);
+						this->gamma.push_back(gamma);
+					}
+					this->K_m = this->gamma[0].size();
+				}
+			}
+
+			else if (key_word == "TIME") {
+				//cout << "Reading TIME data" << '\n';
+				getline(f, line);
+				istringstream time_stream(line);
+				time_stream >> this->t_start >> this->t_end >> this->step_size >> this->print_step;
+			}
+		}
+		cublasError(cublasDestroy(cublasH), __FILE__, __LINE__);
+	}
+}
+
 void param::reset_rho() {
 	int total_size = this->sys_size * this->sys_size;
 	if (!this->d_rho) {
@@ -253,9 +367,8 @@ void param::reset_rho() {
 		for (int i = 0; i < this->ado.size(); i++) this->d_rho_ptr.push_back(this->d_rho + total_size * i);
 	}
 	cudaError(cudaMemset(this->d_rho, 0.0, this->ado.size() * total_size * sizeof(data_type)), __FILE__, __LINE__);
-	data_type* t = new data_type(ONE);
-	cudaError(cudaMemcpy(this->d_rho, t, sizeof(data_type), cudaMemcpyHostToDevice), __FILE__, __LINE__);
-	delete(t);
+	data_type t = ONE;
+	cudaMemcpy(this->d_rho, &t, sizeof(data_type), cudaMemcpyHostToDevice);
 }
 
 /*
@@ -281,7 +394,6 @@ void param::reset_rho() {
 }
 */
 void param::reset_rho_batch() {
-	int total_size = this->sys_size * this->sys_size;
 	if (!this->d_rho_batch) cudaError(cudaMalloc(&this->d_rho_batch, this->ado.size() * sizeof(data_type*)), __FILE__, __LINE__);
 
 	cudaError(cudaMemcpy(this->d_rho_batch, this->d_rho_ptr.data(), this->ado.size() * sizeof(data_type*), cudaMemcpyHostToDevice), __FILE__, __LINE__);
@@ -290,15 +402,15 @@ void param::reset_rho_batch() {
 
 
 void param::param_free() {
-	cudaError(cudaFree(this->d_Disorder), __FILE__, __LINE__);
-	cudaError(cudaFree(this->d_eigenstate), __FILE__, __LINE__);
-	cudaError(cudaFree(this->d_Hal), __FILE__, __LINE__);
-	cudaError(cudaFree(this->d_S), __FILE__, __LINE__);
+	if (this->d_Disorder) cudaError(cudaFree(this->d_Disorder), __FILE__, __LINE__);
+	if (this->d_eigenstate) cudaError(cudaFree(this->d_eigenstate), __FILE__, __LINE__);
+	if (this->d_Hal) cudaError(cudaFree(this->d_Hal), __FILE__, __LINE__);
+	if (this->d_S) cudaError(cudaFree(this->d_S), __FILE__, __LINE__);
 	//if (this->d_rho.size() > 0) for (int i = 0; i < this->ado.size(); i++) cudaError(cudaFree(this->d_rho[i]), __FILE__, __LINE__);
-	cudaError(cudaFree(this->d_rho), __FILE__, __LINE__);
-	cudaError(cudaFree(this->d_rho_batch), __FILE__, __LINE__);
-	cudaError(cudaFree(this->d_Xx), __FILE__, __LINE__);
-	cudaError(cudaFree(this->d_Xy), __FILE__, __LINE__);
-	cudaError(cudaFree(this->d_Xz), __FILE__, __LINE__);
-	cudaError(cudaFree(this->d_X_site), __FILE__, __LINE__);
+	if (this->d_rho) cudaError(cudaFree(this->d_rho), __FILE__, __LINE__);
+	if (this->d_rho_batch) cudaError(cudaFree(this->d_rho_batch), __FILE__, __LINE__);
+	if (this->d_Xx) cudaError(cudaFree(this->d_Xx), __FILE__, __LINE__);
+	if (this->d_Xy) cudaError(cudaFree(this->d_Xy), __FILE__, __LINE__);
+	if (this->d_Xz) cudaError(cudaFree(this->d_Xz), __FILE__, __LINE__);
+	if (this->d_X_site) cudaError(cudaFree(this->d_X_site), __FILE__, __LINE__);
 }

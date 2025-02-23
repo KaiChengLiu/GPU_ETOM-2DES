@@ -1,41 +1,46 @@
 # Compiler and flags
 CXX = nvcc
-CXXFLAGS = -Xcompiler -Wall,-Wno-sign-compare,-Wno-endif-labels,-Wno-unused-variable -O3 -std=c++14
+CXXFLAGS = -O3 -std=c++14 \
+           -diag-suppress=177 -diag-suppress=unused-but-set-variable \
+           -Xcompiler -Wall \
+           -Xcompiler -Wno-sign-compare \
+           -Xcompiler -Wno-endif-labels \
+           -Xcompiler -Wno-unused-variable
 
-# Include directories for CUDA libraries
-INCLUDES = -I/usr/include -I../lib -I/usr/local/cuda/include
 
-# Libraries to link against, including cuBLAS
-LIBS = -L../lib -lcpu2des -lcublas
+# Include directories for CUDA and lib folder
+INCLUDES = -I/usr/include -I/usr/local/cuda/include -I../lib
 
-# Source files (changed .cpp to .cu)
+# Source files in src/
 SRCS = GPU_2DES.cu GPU_dynamics.cu
 
 # Object files
 OBJS = $(SRCS:.cu=.o)
 
+# Library path and linked library
+LIB_PATH = ../lib
+LIBS = -L$(LIB_PATH) -lcpu2des -lcublas
+
 # Executable names
-EXEC_2DES = GPU_2DES
-EXEC_DYNAMICS = GPU_dynamics
+EXECUTABLES = GPU_2DES GPU_dynamics
 
-# Default target (build both executables)
-all: $(EXEC_2DES) $(EXEC_DYNAMICS)
+# Default target (build all executables)
+all: $(EXECUTABLES)
 
-# Link the GPU_2DES executable
-$(EXEC_2DES): GPU_2DES.o
-	$(CXX) $(CXXFLAGS) -o $(EXEC_2DES) GPU_2DES.o $(LIBS)
-
-# Link the GPU_dynamics executable
-$(EXEC_DYNAMICS): GPU_dynamics.o
-	$(CXX) $(CXXFLAGS) -o $(EXEC_DYNAMICS) GPU_dynamics.o $(LIBS)
-
-# Compile source files into object files
+# Compile CUDA object files
 %.o: %.cu
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -dc $< -o $@
 
-# Clean up the build directory
+# Link each .o file into its corresponding executable
+GPU_2DES: GPU_2DES.o
+	$(CXX) $(CXXFLAGS) GPU_2DES.o -o GPU_2DES $(LIBS)
+
+GPU_dynamics: GPU_dynamics.o
+	$(CXX) $(CXXFLAGS) GPU_dynamics.o -o GPU_dynamics $(LIBS)
+
+# Clean up build files
 clean:
-	rm -f $(OBJS) $(EXEC_2DES) $(EXEC_DYNAMICS)
+	rm -f $(OBJS) $(EXECUTABLES)
 
 # Phony targets
 .PHONY: all clean

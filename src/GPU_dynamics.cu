@@ -1,4 +1,3 @@
-#pragma execution_character_set("utf-8")
 #include "HEOM_utilize.h"
 #include "HEOM_kernel_func.h"
 #include "HEOM_constant.h"
@@ -24,35 +23,27 @@
 using namespace std;
 
 int main(int argc, char** argv)
-{	
+{
 	string filename(argv[1]);
-	cout << "Now is GPU version" << '\n';
-	std::cout << "running " << filename << '\n';
-	param k(filename);
+	param k;
+	k.param_dynamics(filename);
 	construct_ADO_set(k);
+	vector<int> sites = { 1 };
+
+	vector<vector<float>> population(sites.size());
 	
-	cublasHandle_t cublasH;
-	cublasCreate(&cublasH);
-
-	int sys_size = k.sys_size;
-	int total_size = k.sys_size * k.sys_size;
+	dynamics_solver(k, sites, population);
 	
-    vector<int> sites = {1, 2};
-	vector<vector<float>> population(sites.size(), vector<float>((k.t_end - k.t_start) / k.print_step + 1, 0.0));
-
-    dynamics_solver(k, sites, population);
-
 	for (int i = 0; i < sites.size(); i++) {
-        cout << "site" << " " << i + 1 << " " << "population: " << '\n' << '\n';
-		for (int j = 0; j < population[i].size(); j++) {
+		cout << "site" << " " << i + 1 << " " << "population: " << '\n' << '\n';
+		for (int j = 0; j < population[0].size(); j++) {
 			cout << population[i][j] << '\n';
 		}
-        cout << '\n';
+		cout << '\n';
 	}
 	
-	cublasError(cublasDestroy(cublasH), __FILE__, __LINE__);
 	cudaError(cudaDeviceSynchronize(), __FILE__, __LINE__);
-	
+
 	k.param_free();
 	return 0;
 }
