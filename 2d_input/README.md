@@ -15,9 +15,9 @@ HAMILTONIAN: Define the system Hamiltonian including ground state and first exci
 
 DISORDER: Define the static disorder matrix of Hamiltonian. The first two number in first row are sampling times and random seed
 
-BATHTYPE: Define the bath type, currently only support "etom".
+BATHTYPE: Define the bath type, currently only support "artificial".
 
-BATH: Define bath information, it will be automatically written by ETOM.py in ../bath_model.
+BATH: Define bath information, it will be automatically written by {spectral_density_type}_ETOM.py in ../bath_model.
 
 DIPOLE: Define dipole information, number in first row is the number of transition diploe vector.
         The following rows first represent the dipole direction and its amplitude in XYZ component.
